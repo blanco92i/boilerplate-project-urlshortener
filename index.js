@@ -135,23 +135,60 @@ app.get('/api/shorturl/:short_url', async (req, res) => {
 //   }
 // });
 
+// app.post('/api/shorturl', async (req, res) => {
+//   const originalUrl =req.body.url;
+
+//   const urlRegex = /^(http|https):\/\/[a-zA-Z0-9-]+\.[a-zA-Z]{2,}.*$/;
+
+//   //Vérifie si l'URL est dans un format valide
+//   if (!urlRegex.test(originalUrl)) {
+//        return res.json({ error: 'invalid url' });
+//   }
+
+
+//   const urlObject = urlParser.parse(originalUrl);
+//   dns.lookup(urlObject.hostname, async (err) => {
+//     if (err) {
+//       return res.json({ error: 'invalid url' });
+//     } else {
+//       try {
+//         const count = await Url.countDocuments({});
+//         const newUrl = new Url({
+//           original_url: originalUrl,
+//           short_url: count + 1
+//         });
+
+//         const data = await newUrl.save();
+//         res.json({ original_url: data.original_url, short_url: data.short_url });
+//       } catch (error) {
+//         res.json({ error: 'Server error' });
+//       }
+//     }
+//   });
+// });
+
 app.post('/api/shorturl', async (req, res) => {
-  const originalUrl =req.body.url;
+  const originalUrl = req.body.url;
 
-  const urlRegex = /^(http|https):\/\/[a-zA-Z0-9-]+\.[a-zA-Z]{2,}.*$/;
-
-  //Vérifie si l'URL est dans un format valide
-  if (!urlRegex.test(originalUrl)) {
-       return res.json({ error: 'invalid url' });
+  // Valide l'URL de manière plus permissive
+  try {
+    const urlObject = new URL(originalUrl);
+  } catch (e) {
+    return res.json({ error: 'invalid url' });
   }
 
-  
-  const urlObject = urlParser.parse(originalUrl);
-  dns.lookup(urlObject.hostname, async (err) => {
+  // Vérifie si l'URL existe avec DNS
+  const parsedUrl = urlParser.parse(originalUrl);
+  dns.lookup(parsedUrl.hostname, async (err) => {
     if (err) {
       return res.json({ error: 'invalid url' });
     } else {
       try {
+        const existingUrl = await Url.findOne({ original_url: originalUrl });
+        if (existingUrl) {
+          return res.json({ original_url: existingUrl.original_url, short_url: existingUrl.short_url });
+        }
+
         const count = await Url.countDocuments({});
         const newUrl = new Url({
           original_url: originalUrl,
