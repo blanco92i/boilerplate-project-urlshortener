@@ -137,6 +137,15 @@ app.get('/api/shorturl/:short_url', async (req, res) => {
 
 app.post('/api/shorturl', async (req, res) => {
   const originalUrl =req.body.url;
+
+  const urlRegex = /^(http|https):\/\/[a-zA-Z0-9-]+\.[a-zA-Z]{2,}.*$/;
+
+  //Vérifie si l'URL est dans un format valide
+  if (!urlRegex.test(originalUrl)) {
+       return res.json({ error: 'invalid url' });
+  }
+
+  
   const urlObject = urlParser.parse(originalUrl);
   dns.lookup(urlObject.hostname, async (err) => {
     if (err) {
