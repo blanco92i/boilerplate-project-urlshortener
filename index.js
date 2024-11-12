@@ -170,10 +170,16 @@ app.get('/api/shorturl/:short_url', async (req, res) => {
 app.post('/api/shorturl', async (req, res) => {
   const originalUrl = req.body.url;
 
-  // Valide l'URL de manière plus permissive
+  // Vérifie que l'URL suit le format général http://www.example.com
   try {
     const urlObject = new URL(originalUrl);
+
+    // Vérifie que le protocole est http ou https
+    if (urlObject.protocol !== 'http:' && urlObject.protocol !== 'https:') {
+      return res.json({ error: 'invalid url' });
+    }
   } catch (e) {
+    // Si l'analyse échoue, retourne une erreur
     return res.json({ error: 'invalid url' });
   }
 
@@ -184,11 +190,13 @@ app.post('/api/shorturl', async (req, res) => {
       return res.json({ error: 'invalid url' });
     } else {
       try {
+        // Vérifie si l'URL existe déjà dans la base de données
         const existingUrl = await Url.findOne({ original_url: originalUrl });
         if (existingUrl) {
           return res.json({ original_url: existingUrl.original_url, short_url: existingUrl.short_url });
         }
 
+        // Crée une nouvelle URL raccourcie
         const count = await Url.countDocuments({});
         const newUrl = new Url({
           original_url: originalUrl,
@@ -203,6 +211,7 @@ app.post('/api/shorturl', async (req, res) => {
     }
   });
 });
+
 
 app.get('/api/hello', function(req, res) {
   res.json({ greeting: 'hello API' });
