@@ -54,8 +54,22 @@ app.get('/', function(req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
-app.post('/api/shorturl',(req,res)=>{
+app.post('/api/shorturl', async(req,res)=>{
   let originalUrl = req.body.url;
+  const urlRegex = /^(http|https):\/\/[a-zA-Z0-9-]+\.[a-zA-Z]{2,}.*$/;
+
+  // Vérifie si l'URL est dans un format valide
+  if (!urlRegex.test(originalUrl)) {
+    return res.json({ error: 'invalid url' });
+  }
+
+  try {
+    //verifier si l'url existe deja dans la base de donné
+    let foundUlr = await Url.findOne({original_url:originalUrl});
+    if(foundUlr){
+      return res.json({originalUrl:foundUlr.original_url, shortUrl:foundUlr.short_url})
+    }
+
   // Valider l'URL avec un format http://www.example.com
   const urlObject = urlParser.parse(originalUrl);
   dns.lookup(urlObject.hostname, async (err) => {
@@ -76,6 +90,10 @@ app.post('/api/shorturl',(req,res)=>{
       }
     }
   });
+  } catch (error) {
+    res.json({ error: 'Server error' });
+  }
+
 });
 
 // Route GET pour rediriger vers l'URL d'origine
