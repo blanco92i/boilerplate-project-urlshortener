@@ -55,21 +55,56 @@ app.get('/', function(req, res) {
 });
 
 // Route GET pour rediriger vers l'URL d'origine
-// app.get('/api/shorturl/:short_url', async (req, res) => {
-//   const shortUrl = req.params.short_url;
+app.get('/api/shorturl/:short_url', async (req, res) => {
+  const shortUrl = req.params.short_url;
 
-//   try {
-//     const data = await Url.findOne({ short_url: shortUrl });
-//     if (!data) {
-//       return res.json({ error: 'No short URL found for the given input' });
-//     }
-//     res.redirect(data.original_url);
-//   } catch (err) {
-//     res.json({ error: 'Server error' });
+  try {
+    const data = await Url.findOne({ short_url: shortUrl });
+    if (!data) {
+      return res.json({ error: 'No short URL found for the given input' });
+    }
+    res.redirect(data.original_url);
+  } catch (err) {
+    res.json({ error: 'Server error' });
+  }
+});
+
+// app.post('/api/shorturl', async(req,res)=>{
+//   let originalUrl = req.body.url;
+//   const urlRegex = /^(http|https):\/\/[a-zA-Z0-9-]+\.[a-zA-Z]{2,}.*$/;
+
+//   // Vérifie si l'URL est dans un format valide
+//   if (!urlRegex.test(originalUrl)) {
+//     return res.json({ error: 'invalid url' });
 //   }
+
+//   // Valider l'URL avec un format http://www.example.com
+//   const urlObject = urlParser.parse(originalUrl);
+//   dns.lookup(urlObject.hostname, async (err) => {
+//     if (err) {
+//       return res.json({ error: 'invalid url' });
+//     } else {
+//       try {
+//         const count = await Url.countDocuments({});
+//         const newUrl = new Url({
+//           original_url: originalUrl,
+//           short_url: count + 1
+//         });
+
+//         const data = await newUrl.save();
+//         res.json({ original_url: data.original_url, short_url: data.short_url });
+//       } catch (error) {
+//         res.json({ error: 'Server error' });
+//       }
+//     }
+//   });
 // });
 
-app.post('/api/shorturl', async(req,res)=>{
+
+// Your first API endpoint
+
+
+app.post('/api/shorturl', async (req, res) => {
   let originalUrl = req.body.url;
   const urlRegex = /^(http|https):\/\/[a-zA-Z0-9-]+\.[a-zA-Z]{2,}.*$/;
 
@@ -78,30 +113,27 @@ app.post('/api/shorturl', async(req,res)=>{
     return res.json({ error: 'invalid url' });
   }
 
-  // Valider l'URL avec un format http://www.example.com
-  const urlObject = urlParser.parse(originalUrl);
-  dns.lookup(urlObject.hostname, async (err) => {
-    if (err) {
-      return res.json({ error: 'invalid url' });
-    } else {
-      try {
-        const count = await Url.countDocuments({});
-        const newUrl = new Url({
-          original_url: originalUrl,
-          short_url: count + 1
-        });
-
-        const data = await newUrl.save();
-        res.json({ original_url: data.original_url, short_url: data.short_url });
-      } catch (error) {
-        res.json({ error: 'Server error' });
-      }
+  try {
+    // Vérifie si l'URL existe déjà dans la base de données
+    let foundUrl = await Url.findOne({ original_url: originalUrl });
+    if (foundUrl) {
+      return res.json({ original_url: foundUrl.original_url, short_url: foundUrl.short_url });
     }
-  });
+
+    // Crée une nouvelle URL si elle n'existe pas
+    const count = await Url.countDocuments({});
+    const newUrl = new Url({
+      original_url: originalUrl,
+      short_url: count + 1
+    });
+
+    const data = await newUrl.save();
+    res.json({ original_url: data.original_url, short_url: data.short_url });
+  } catch (error) {
+    res.json({ error: 'Server error' });
+  }
 });
 
-
-// Your first API endpoint
 app.get('/api/hello', function(req, res) {
   res.json({ greeting: 'hello API' });
 });
