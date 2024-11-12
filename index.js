@@ -63,12 +63,12 @@ app.post('/api/shorturl', async(req,res)=>{
     return res.json({ error: 'invalid url' });
   }
 
-  try {
-    //verifier si l'url existe deja dans la base de donné
-    let foundUlr = await Url.findOne({original_url:originalUrl});
-    if(foundUlr){
-      return res.json({ message:'url exit deja', originalUrl:foundUlr.original_url, shortUrl:foundUlr.short_url})
-    }
+  // try {
+  //   //verifier si l'url existe deja dans la base de donné
+  //   let foundUlr = await Url.findOne({original_url:originalUrl});
+  //   if(foundUlr){
+  //     return res.json({ message:'url exit deja', originalUrl:foundUlr.original_url, shortUrl:foundUlr.short_url})
+  //   }
 
   // Valider l'URL avec un format http://www.example.com
   const urlObject = urlParser.parse(originalUrl);
@@ -90,9 +90,9 @@ app.post('/api/shorturl', async(req,res)=>{
       }
     }
   });
-  } catch (error) {
-    res.json({ error: 'Server error' });
-  }
+  // } catch (error) {
+  //   res.json({ error: 'Server error' });
+  // }
 
 });
 
