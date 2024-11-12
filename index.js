@@ -67,7 +67,7 @@ app.post('/api/shorturl', async(req,res)=>{
     //verifier si l'url existe deja dans la base de donné
     let foundUlr = await Url.findOne({original_url:originalUrl});
     if(foundUlr){
-      return res.json({originalUrl:foundUlr.original_url, shortUrl:foundUlr.short_url})
+      return res.json({ message:'url exit deja', originalUrl:foundUlr.original_url, shortUrl:foundUlr.short_url})
     }
 
   // Valider l'URL avec un format http://www.example.com
