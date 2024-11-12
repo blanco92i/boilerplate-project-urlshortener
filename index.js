@@ -136,41 +136,26 @@ app.get('/api/shorturl/:short_url', async (req, res) => {
 // });
 
 app.post('/api/shorturl', async (req, res) => {
-  let originalUrl = req.body.url;
-  const urlRegex = /^(http|https):\/\/[a-zA-Z0-9-]+\.[a-zA-Z]{2,}.*$/;
+  const originalUrl =req.body.url;
+  const urlObject = urlParser.parse(originalUrl);
+  dns.lookup(urlObject.hostname, async (err) => {
+    if (err) {
+      return res.json({ error: 'invalid url' });
+    } else {
+      try {
+        const count = await Url.countDocuments({});
+        const newUrl = new Url({
+          original_url: originalUrl,
+          short_url: count + 1
+        });
 
-  console.log('URL reçue :', originalUrl);
-
-  // Vérifie si l'URL est dans un format valide
-  if (!urlRegex.test(originalUrl)) {
-    console.log('URL invalide détectée');
-    return res.json({ error: 'invalid url' });
-  }
-
-  try {
-    // Vérifie si l'URL existe déjà dans la base de données
-    let foundUrl = await Url.findOne({ original_url: originalUrl });
-    if (foundUrl) {
-      console.log('URL déjà existante trouvée dans la base de données');
-      return res.json({ original_url: foundUrl.original_url, short_url: foundUrl.short_url });
+        const data = await newUrl.save();
+        res.json({ original_url: data.original_url, short_url: data.short_url });
+      } catch (error) {
+        res.json({ error: 'Server error' });
+      }
     }
-
-    // Crée une nouvelle URL si elle n'existe pas
-    const count = await Url.countDocuments({});
-    console.log('Nombre d\'enregistrements actuels :', count);
-
-    const newUrl = new Url({
-      original_url: originalUrl,
-      short_url: count + 1
-    });
-
-    const data = await newUrl.save();
-    console.log('Nouvelle URL enregistrée :', data);
-    res.json({ original_url: data.original_url, short_url: data.short_url });
-  } catch (error) {
-    console.error('Erreur du serveur :', error);
-    res.json({ error: 'Server error' });
-  }
+  });
 });
 
 app.get('/api/hello', function(req, res) {
