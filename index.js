@@ -55,19 +55,19 @@ app.get('/', function(req, res) {
 });
 
 // Route GET pour rediriger vers l'URL d'origine
-app.get('/api/shorturl/:short_url', async (req, res) => {
-  const shortUrl = req.params.short_url;
+// app.get('/api/shorturl/:short_url', async (req, res) => {
+//   const shortUrl = req.params.short_url;
 
-  try {
-    const data = await Url.findOne({ short_url: shortUrl });
-    if (!data) {
-      return res.json({ error: 'No short URL found for the given input' });
-    }
-    res.redirect(data.original_url);
-  } catch (err) {
-    res.json({ error: 'Server error' });
-  }
-});
+//   try {
+//     const data = await Url.findOne({ short_url: shortUrl });
+//     if (!data) {
+//       return res.json({ error: 'No short URL found for the given input' });
+//     }
+//     res.redirect(data.original_url);
+//   } catch (err) {
+//     res.json({ error: 'Server error' });
+//   }
+// });
 
 app.post('/api/shorturl', async(req,res)=>{
   let originalUrl = req.body.url;
