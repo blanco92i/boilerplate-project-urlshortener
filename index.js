@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const dns = require('dns');
 const urlParser = require('url');
 const mongoose  = require('mongoose');
+const asyncHandler = require('express-async-handler')
 const app = express();
 
 // parse application/x-www-form-urlencoded
@@ -106,14 +107,14 @@ app.get('/api/shorturl/:short_url', async (req, res) => {
 
 app.post('/api/shorturl', async (req, res) => {
   let originalUrl = req.body.url;
-  const urlRegex = /^(http|https):\/\/[a-zA-Z0-9-]+\.[a-zA-Z]{2,}.*$/;
-
-  // Vérifie si l'URL est dans un format valide
-  if (!urlRegex.test(originalUrl)) {
-    return res.json({ error: 'invalid url' });
-  }
 
   try {
+    const urlRegex = /^(http|https):\/\/[a-zA-Z0-9-]+\.[a-zA-Z]{2,}.*$/;
+
+    // Vérifie si l'URL est dans un format valide
+    if (!urlRegex.test(originalUrl)) {
+      return res.json({ error: 'invalid url' });
+    }
     // Vérifie si l'URL existe déjà dans la base de données
     let foundUrl = await Url.findOne({ original_url: originalUrl });
     if (foundUrl) {
